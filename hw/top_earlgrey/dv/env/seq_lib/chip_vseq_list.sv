@@ -60,6 +60,7 @@
 `include "chip_sw_sleep_pin_retention_vseq.sv"
 `include "chip_sw_pwm_pulses_vseq.sv"
 `include "chip_sw_keymgr_key_derivation_vseq.sv"
+`include "chip_sw_keymgr_derive_sealing_vseq.sv"
 `include "chip_sw_keymgr_sideload_kmac_vseq.sv"
 `include "chip_sw_keymgr_sideload_aes_vseq.sv"
 `include "chip_sw_ast_clk_outputs_vseq.sv"

@@ -44,6 +44,13 @@ class chip_sw_keymgr_key_derivation_vseq extends chip_sw_base_vseq;
   } adv_owner_int_data_t;
 
   typedef struct packed {
+    // some portions are unused, which are 0s
+    bit [keymgr_pkg::AdvDataWidth-keymgr_pkg::KeyWidth-keymgr_pkg::SwBindingWidth-1:0] unused;
+    bit [keymgr_reg_pkg::NumSwBindingReg-1:0][TL_DW-1:0] SoftwareBinding;
+    bit [keymgr_pkg::KeyWidth-1:0]                       OwnerSeed;
+  } adv_owner_root_data_t;
+
+  typedef struct packed {
     bit [TL_DW-1:0]      KeyVersion;
     bit [keymgr_reg_pkg::NumSaltReg-1:0][TL_DW-1:0] Salt;
     keymgr_pkg::seed_t   KeyID;
@@ -59,6 +66,10 @@ class chip_sw_keymgr_key_derivation_vseq extends chip_sw_base_vseq;
   localparam bit [keymgr_reg_pkg::NumSwBindingReg-1:0][TL_DW-1:0] OwnerIntSwBinding = {
       32'h1940ceeb, 32'hf1394d28, 32'hb012ae5e, 32'h23fb480c,
       32'h3195dbfa, 32'hc2f3bbaf, 32'h3f83d390, 32'he4987b39};
+
+  localparam bit [keymgr_reg_pkg::NumSwBindingReg-1:0][TL_DW-1:0] OwnerRootSwBinding = {
+      32'ha02ad81d, 32'h1803199e, 32'h1f7dec77, 32'hec8298be,
+      32'h35b37c77, 32'h217773d4, 32'hb6ebe129, 32'hd8a812ea};
 
   localparam bit [flash_ctrl_pkg::SeedWidth-1:0] CreatorFlashSeeds = {
       32'ha6521d8f, 32'h13a0e876, 32'h1ca1567b, 32'hb4fb0fdf,
@@ -145,6 +156,10 @@ class chip_sw_keymgr_key_derivation_vseq extends chip_sw_base_vseq;
     check_op_in_owner_int_state(new_unmasked_key);
   endtask
 
+  virtual task initialize();
+    super.body();
+  endtask
+
   virtual task check_op_in_owner_int_state(bit [keymgr_pkg::KeyWidth-1:0] unmasked_key);
     string path_otbn_key = "tb.dut.top_earlgrey.u_keymgr.otbn_key_o";
     bit [keymgr_pkg::KeyWidth-1:0]     exp_digest;
@@ -161,6 +176,8 @@ class chip_sw_keymgr_key_derivation_vseq extends chip_sw_base_vseq;
     check_kmac_sideload(unmasked_key, unused_key);
 
     check_aes_sideload(unmasked_key, unused_key);
+
+    //check_otbn_sideload(unmasked_key, "OwnerIntKey", unused_key);
 
     // otbn sideload key is 384 bit, so it's treated a bit differently
     begin
@@ -212,6 +229,27 @@ class chip_sw_keymgr_key_derivation_vseq extends chip_sw_base_vseq;
 
   endtask
 
+  virtual task check_otbn_sideload(bit [keymgr_pkg::KeyWidth-1:0] unmasked_key,
+                                   string state_name,
+                                   output bit [kmac_pkg::AppDigestW-1:0] sideload_otbn_key);
+    keymgr_pkg::otbn_key_req_t hw_key;
+    bit [7:0] data_arr[];
+    bit [kmac_pkg::AppDigestW-1:0] unmask_act_key, unmask_exp_key;
+    string path_otbn_key = "tb.dut.top_earlgrey.u_keymgr.otbn_key_o";
+    `DV_WAIT(cfg.sw_logger_vif.printed_log ==
+          $sformatf("Keymgr generated HW output for Otbn at %s State", state_name))
+    `DV_CHECK_FATAL(uvm_hdl_check_path(path_otbn_key))
+    `DV_CHECK_FATAL(uvm_hdl_read(path_otbn_key, hw_key))
+    `DV_CHECK_EQ(hw_key.valid, 1)
+
+    //unmask_act_key = hw_key.key[0] ^ hw_key.key[1];
+    sideload_otbn_key = hw_key.key[0] ^ hw_key.key[1];
+
+    {<< byte {data_arr}} = GenOtbnOutData;
+    unmask_exp_key = get_kmac_digest(unmasked_key, data_arr);
+   `DV_CHECK_EQ(sideload_otbn_key, unmask_exp_key)
+  endtask
+
   virtual function bit [keymgr_pkg::KeyWidth-1:0] get_unmasked_key(key_shares_t two_share_key);
     return two_share_key[0] ^ two_share_key[1];
   endfunction
@@ -260,6 +298,14 @@ class chip_sw_keymgr_key_derivation_vseq extends chip_sw_base_vseq;
     owner_int_data.CreatorSeed     = CreatorFlashSeeds;
 
     return keymgr_pkg::AdvDataWidth'(owner_int_data);
+  endfunction
+
+  virtual function bit [keymgr_pkg::AdvDataWidth-1:0] get_owner_root_data();
+    adv_owner_root_data_t owner_root_data;
+    owner_root_data.SoftwareBinding = OwnerRootSwBinding;
+    owner_root_data.OwnerSeed       = OwnerFlashSeeds;
+
+    return keymgr_pkg::AdvDataWidth'(owner_root_data);
   endfunction
 
   virtual function key_shares_t get_otp_root_key();

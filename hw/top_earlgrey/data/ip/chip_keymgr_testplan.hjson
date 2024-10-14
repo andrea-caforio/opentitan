@@ -193,8 +193,8 @@
             stage: V3
             si_stage: SV3
             lc_states: ["PROD"]
-            tests: []
-            bazel: []
+            tests: ["chip_sw_keymgr_derive_sealing"]
+            bazel: ["//sw/device/tests:keymgr_derive_sealing_test"]
     }
   ]
 }

@@ -1996,6 +1996,25 @@ opentitan_test(
     ],
 )
 
+opentitan_test(
+    name = "keymgr_derive_sealing_test",
+    srcs = ["keymgr_derive_sealing_test.c"],
+    exec_env = dicts.add(
+        EARLGREY_TEST_ENVS,
+        {
+            # This test is not supported by the silicon_owner_sival_rom_ext
+            # configuration.
+            "//hw/top_earlgrey:silicon_creator": None,
+        },
+    ),
+    verilator = verilator_params(timeout = "long"),
+    deps = [
+        "//sw/device/lib/testing:keymgr_testutils",
+        "//sw/device/lib/testing:rstmgr_testutils",
+        "//sw/device/lib/testing/test_framework:ottf_main",
+    ],
+)
+
 otp_json(
     name = "otp_ctrl_descrambling_otp_json",
     partitions = [

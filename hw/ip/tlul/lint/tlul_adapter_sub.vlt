@@ -1,0 +1,16 @@
+// Copyright lowRISC contributors (OpenTitan project).
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+//
+// waiver file for tlul_adapter_sub
+
+`verilator_config
+
+// MSB of the size input is ignored.
+lint_off -rule UNUSED -file "*/rtl/tlul_adapter_sub.sv" -match "Bits of signal are not used: 'size_i'[2]"
+
+// Signal is not used: last_i
+lint_off -rule UNUSED -file "*/rtl/tlul_adapter_sub.sv" -match "Signal is not used: 'last_i'"
+
+// Signal is not used: user_i
+lint_off -rule UNUSED -file "*/rtl/tlul_adapter_sub.sv" -match "Signal is not used: 'user_i'"

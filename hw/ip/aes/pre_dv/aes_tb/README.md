@@ -1,7 +1,7 @@
 # TLUL/Shim Verilator Testbench
 
-This directory contains the Verilator testbench for the TLUL shim adapter that is attached to the AES IP block.
-Out of the box, the testbench contains test vectors for most of the salient use cases, nonetheless extending the testbench with further tests is straightforward as detailed below.
+This directory contains the Verilator testbench for the AES IP block.
+Out of the box, the testbench contains test vectors for most of the salient use cases, nonetheless extending the testbench with further tests is straightforward as detailed below. By default, communication with the IP happens over the TLUL bus. If a TLUL/shim adapter is available, messages can optionally be relayed by the shim.
 
 ## Current Test Vectors
 
@@ -37,19 +37,20 @@ Having written a new test vector file, the `fusesoc` configuration needs to be m
 To build the testbench, execute from the OpenTitan top level:
 
 ```sh
-fusesoc --cores-root=. --verbose run --setup --build lowrisc:dv_verilator:aes_tlul_shim_tb
+fusesoc --cores-root=. --verbose run --setup --build lowrisc:dv_verilator:aes_tb
 ```
 To execute the obtained Verilator binary and with trace generation, run:
 
 ```sh
-./build/lowrisc_dv_verilator_aes_tlul_shim_tb_0/default-verilator/Vaes_tlul_shim_tb --trace
+./build/lowrisc_dv_verilator_aes_tb_0/default-verilator/Vaes_tb --trace
 ```
 
 ## Details of the testbench
 
-- cpp/aes\_tlul\_shim\_tb.cc: contains main function and instantiation of SimCtrl
-- rtl/aes\_tlul\_shim\_tb.sv: contains the testbench logic
-- rtl/aes\_tlul\_delayer\_tb.sv: contains an optional delayer module to artificially induce random delays between the Shim and the TLUL bus.
-- rtl/aes\_tlul\_shim\_tb_reqs.sv: contains requests (stimuli) that are fed to the testbench.
-- rtl/aes\_tlul\_shim\_tb_pkg.sv: contains common parameters and functions.
+- cpp/aes\_tb.cc: contains main function and instantiation of SimCtrl
+- rtl/aes\_tb.sv: contains the testbench logic
+- rtl/tlul\_delayer.sv: contains an optional delayer module to artificially induce random delays in the TLUL bus.
+- rtl/tlul\_adapter.sv: is a generic TLUL adapter.
+- rtl/aes\_tb_reqs.sv: contains requests (stimuli) that are fed to the testbench.
+- rtl/aes\_tb_pkg.sv: contains common parameters and functions.
 - data/*: contains test vector files.

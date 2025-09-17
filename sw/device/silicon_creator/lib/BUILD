@@ -295,7 +295,6 @@ dual_cc_library(
             "//sw/device/lib/base:macros",
             "//sw/device/silicon_creator/lib/drivers:lifecycle",
             "//sw/device/silicon_creator/lib/sigverify:ecdsa_p256_key",
-            "//sw/device/silicon_creator/lib/sigverify:rsa_key",
             "//sw/device/silicon_creator/lib/sigverify:spx_key",
             "//sw/device/silicon_creator/lib/base:chip",
         ],
@@ -512,7 +511,6 @@ cc_library(
         "//sw/device/silicon_creator/lib/drivers:keymgr",
         "//sw/device/silicon_creator/lib/drivers:otbn",
         "//sw/device/silicon_creator/lib/sigverify:ecdsa_p256_key",
-        "//sw/device/silicon_creator/lib/sigverify:rsa_key",
         "//sw/otbn/crypto:boot",
     ],
 )

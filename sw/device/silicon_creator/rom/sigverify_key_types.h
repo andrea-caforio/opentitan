@@ -8,7 +8,6 @@
 #include <stdint.h>
 
 #include "sw/device/silicon_creator/lib/sigverify/ecdsa_p256_key.h"
-#include "sw/device/silicon_creator/lib/sigverify/rsa_key.h"
 #include "sw/device/silicon_creator/lib/sigverify/spx_key.h"
 
 #ifdef __cplusplus
@@ -169,50 +168,6 @@ static_assert(sizeof(sigverify_rom_ecdsa_p256_key_entry_t) ==
                   sizeof(sigverify_rom_ecdsa_p256_key_t),
               "Size of an ECDSA P256 public key entry must be equal to the "
               "size of a key");
-
-/**
- * An RSA public key stored in ROM.
- *
- * This struct must start with the common initial sequence
- * `sigverify_rom_key_header_t`.
- */
-typedef struct sigverify_rom_rsa_key_entry {
-  /**
-   * Type of the key.
-   */
-  sigverify_key_type_t key_type;
-  /**
-   * An RSA public key.
-   */
-  sigverify_rsa_key_t key;
-} sigverify_rom_rsa_key_entry_t;
-OT_ASSERT_MEMBER_OFFSET(sigverify_rom_rsa_key_entry_t, key_type, 0);
-OT_ASSERT_MEMBER_OFFSET(sigverify_rom_rsa_key_entry_t, key.n.data[0], 4);
-static_assert(offsetof(sigverify_rom_key_header_t, key_type) ==
-                  offsetof(sigverify_rom_rsa_key_entry_t, key_type),
-              "Invalid key_type offset.");
-static_assert(offsetof(sigverify_rom_key_header_t, key_id) ==
-                  offsetof(sigverify_rom_rsa_key_entry_t, key.n.data[0]),
-              "Invalid key_id offset.");
-
-/**
- * Union type to inspect the common initial sequence of RSA public keys stored
- * in ROM.
- */
-typedef union sigverify_rom_rsa_key {
-  /**
-   * Common initial sequence.
-   */
-  sigverify_rom_key_header_t key_header;
-  /**
-   * Actual RSA public key entry.
-   */
-  sigverify_rom_rsa_key_entry_t entry;
-} sigverify_rom_rsa_key_t;
-
-static_assert(
-    sizeof(sigverify_rom_rsa_key_entry_t) == sizeof(sigverify_rom_rsa_key_t),
-    "Size of an RSA public key entry must be equal to the size of a key");
 
 /**
  * An SPX public key stored in ROM.

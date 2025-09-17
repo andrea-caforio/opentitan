@@ -87,12 +87,9 @@ enum module_ {
   X(kErrorWriteBootdataThenReboot,    0x2ea), \
   X(kErrorUnknown,                    0xffffffff), \
   \
-  X(kErrorSigverifyBadRsaSignature,   ERROR_(1, kModuleSigverify, kInvalidArgument)), \
   X(kErrorSigverifyBadSpxSignature,   ERROR_(2, kModuleSigverify, kInvalidArgument)), \
   X(kErrorSigverifyBadKey,            ERROR_(3, kModuleSigverify, kInvalidArgument)), \
-  X(kErrorSigverifyBadRsaKey,         ERROR_(4, kModuleSigverify, kInvalidArgument)), \
   X(kErrorSigverifyBadSpxKey,         ERROR_(5, kModuleSigverify, kInvalidArgument)), \
-  X(kErrorSigverifyLargeRsaSignature, ERROR_(6, kModuleSigverify, kInvalidArgument)), \
   X(kErrorSigverifyBadEcdsaSignature, ERROR_(7, kModuleSigverify, kInvalidArgument)), \
   X(kErrorSigverifyBadAuthPartition,  ERROR_(8, kModuleSigverify, kInvalidArgument)), \
   X(kErrorSigverifyBadEcdsaKey,       ERROR_(9, kModuleSigverify, kInvalidArgument)), \

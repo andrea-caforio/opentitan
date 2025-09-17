@@ -10,7 +10,6 @@
 #include "sw/device/lib/base/bitfield.h"
 #include "sw/device/lib/base/macros.h"
 #include "sw/device/silicon_creator/lib/sigverify/ecdsa_p256_key.h"
-#include "sw/device/silicon_creator/lib/sigverify/rsa_key.h"
 #include "sw/device/silicon_creator/lib/sigverify/spx_key.h"
 
 #ifdef __cplusplus
@@ -60,8 +59,6 @@ typedef enum ownership_state {
 } ownership_state_t;
 
 typedef enum ownership_key_alg {
-  /** Key algorithm RSA: `RSA3` */
-  kOwnershipKeyAlgRsa = 0x33415352,
   /** Key algorithm ECDSA P-256: `P256` */
   kOwnershipKeyAlgEcdsaP256 = 0x36353250,
   /** Key algorithm SPX+ Pure: `S+Pu` */
@@ -251,7 +248,6 @@ typedef struct owner_application_key {
   /** Key material.  Varies by algorithm type. */
   union {
     uint32_t id;
-    sigverify_rsa_key_t rsa;
     sigverify_spx_key_t spx;
     ecdsa_p256_public_key_t ecdsa;
     hybrid_key_t hybrid;
@@ -264,11 +260,9 @@ OT_ASSERT_MEMBER_OFFSET(owner_application_key_t, key_domain, 12);
 OT_ASSERT_MEMBER_OFFSET(owner_application_key_t, key_diversifier, 16);
 OT_ASSERT_MEMBER_OFFSET(owner_application_key_t, usage_constraint, 44);
 OT_ASSERT_MEMBER_OFFSET(owner_application_key_t, data, 48);
-OT_ASSERT_SIZE(owner_application_key_t, 464);
+OT_ASSERT_SIZE(owner_application_key_t, 144);
 
 enum {
-  kTlvLenApplicationKeyRsa =
-      offsetof(owner_application_key_t, data) + sizeof(sigverify_rsa_key_t),
   kTlvLenApplicationKeySpx =
       offsetof(owner_application_key_t, data) + sizeof(sigverify_spx_key_t),
   kTlvLenApplicationKeyEcdsa =

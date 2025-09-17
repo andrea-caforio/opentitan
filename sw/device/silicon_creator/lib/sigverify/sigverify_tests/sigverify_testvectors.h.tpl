@@ -16,8 +16,6 @@ extern "C" {
 
 // A test vector for RSA-3072 verify (message hashed with SHA-256)
 typedef struct sigverify_test_vector_t {
-  sigverify_rsa_key_t key;     // The public key
-  sigverify_rsa_buffer_t sig;  // The signature to verify
   uint32_t encoded_msg[96];    // Encoded message (PKCSv1,5, SHA-256)
   bool valid;                  // Expected result (true if signature valid)
   char *comment;               // Any notes about the test vector

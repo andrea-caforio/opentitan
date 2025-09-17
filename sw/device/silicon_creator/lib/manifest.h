@@ -14,7 +14,6 @@
 #include "sw/device/silicon_creator/lib/error.h"
 #include "sw/device/silicon_creator/lib/keymgr_binding_value.h"
 #include "sw/device/silicon_creator/lib/sigverify/ecdsa_p256_key.h"
-#include "sw/device/silicon_creator/lib/sigverify/rsa_key.h"
 #include "sw/device/silicon_creator/lib/sigverify/spx_key.h"
 
 #ifdef __cplusplus
@@ -215,15 +214,6 @@ typedef struct manifest {
    */
   union {
     /**
-     * RSA signature of the image.
-     *
-     * RSASSA-PKCS1-v1_5 signature of the image generated using a 3072-bit RSA
-     * private key and the SHA-256 hash function. The signed region of an image
-     * starts immediately after this field and ends at the end of the image.
-     */
-    sigverify_rsa_buffer_t rsa_signature;
-
-    /**
      * ECDSA P256 signature of the image.
      *
      * ECDSA P256 signature of the image generated using a NIST P256 ECC key
@@ -244,10 +234,6 @@ typedef struct manifest {
    * - For `kManifestVersionMajor2`: `ecdsa_public_key`.
    */
   union {
-    /**
-     * Modulus of the signer's 3072-bit RSA public key.
-     */
-    sigverify_rsa_buffer_t rsa_modulus;
     /**
      * Signer's ECDSA NIST P256 ECC public key.
      */
@@ -333,26 +319,24 @@ typedef struct manifest {
   manifest_ext_table_t extensions;
 } manifest_t;
 
-OT_ASSERT_MEMBER_OFFSET(manifest_t, rsa_signature, 0);
 OT_ASSERT_MEMBER_OFFSET(manifest_t, ecdsa_signature, 0);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, usage_constraints, 384);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, rsa_modulus, 432);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, ecdsa_public_key, 432);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, address_translation, 816);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, identifier, 820);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, manifest_version, 824);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, signed_region_end, 828);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, length, 832);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, version_major, 836);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, version_minor, 840);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, security_version, 844);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, timestamp, 848);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, binding_value, 856);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, max_key_version, 888);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, code_start, 892);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, code_end, 896);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, entry_point, 900);
-OT_ASSERT_MEMBER_OFFSET(manifest_t, extensions, 904);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, usage_constraints, 64);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, ecdsa_public_key, 112);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, address_translation, 176);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, identifier, 180);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, manifest_version, 184);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, signed_region_end, 188);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, length, 192);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, version_major, 196);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, version_minor, 200);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, security_version, 204);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, timestamp, 208);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, binding_value, 216);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, max_key_version, 248);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, code_start, 252);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, code_end, 256);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, entry_point, 260);
+OT_ASSERT_MEMBER_OFFSET(manifest_t, extensions, 264);
 OT_ASSERT_SIZE(manifest_t, CHIP_MANIFEST_SIZE);
 
 /**

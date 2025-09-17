@@ -692,31 +692,6 @@ WYCHEPROOF_RSA_PSS_SUFFIXES = {
 
 [
     run_binary(
-        name = cryptotest_name,
-        srcs = [
-            "//sw/device/tests/crypto/testvectors:{}".format(src_name),
-            "//sw/host/cryptotest/testvectors/data/schemas:rsa_schema.json",
-        ],
-        outs = [":{}.json".format(cryptotest_name)],
-        args = [
-            "--src",
-            "$(location //sw/device/tests/crypto/testvectors:{})".format(src_name),
-            "--dst",
-            "$(location :{}.json)".format(cryptotest_name),
-            "--schema",
-            "$(location //sw/host/cryptotest/testvectors/data/schemas:rsa_schema.json)",
-            "--security_level",
-            str(security_level),
-        ],
-        tool = "//sw/host/cryptotest/testvectors/parsers:hjson_rsa_parser",
-    )
-    for src_name, cryptotest_name, security_level in [
-        ("rsa_3072_verify_hardcoded.hjson", "manual_rsa_3072", 3072),
-    ]
-]
-
-[
-    run_binary(
         name = "rsp_sphincsplus_{}_128s_simple_json".format(hash_alg),
         srcs = [
             "//sw/host/cryptotest/testvectors/data/schemas:sphincsplus_schema.json",

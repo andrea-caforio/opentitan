@@ -63,8 +63,6 @@ licence_test(
         "sw/otbn/crypto/modexp.s",
         "sw/otbn/crypto/montmul.s",
         "sw/otbn/crypto/p256.s",
-        "sw/otbn/crypto/rsa_verify.s",
-        "sw/otbn/crypto/handwritten/rsa_verify_3072.s",
         "sw/otbn/crypto/sha512.s",
         # Code based on tiny_sha3
         "sw/otbn/crypto/sha3_shake.s",

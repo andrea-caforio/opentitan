@@ -13,7 +13,7 @@
 /**
  * Manifest size for boot stages stored in flash (in bytes).
  */
-#define CHIP_MANIFEST_SIZE 1024
+#define CHIP_MANIFEST_SIZE 384
 
 /**
  * Manifest format major and minor versions.

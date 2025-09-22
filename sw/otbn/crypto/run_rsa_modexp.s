@@ -145,18 +145,18 @@ do_modexp:
   jal      x1, modload
 
   /* Run exponentiation.
-       dmem[work_buf] = dmem[inout]^dmem[d] mod dmem[n] */
-  la       x14, inout
-  la       x15, d
-  la       x2, work_buf
+       dmem[inout] = dmem[inout]^dmem[d] mod dmem[n] */
+  ## la       x14, inout
+  ## la       x15, d
+  ## la       x2, work_buf
   jal      x1, modexp
 
   /* Copy final result to the output buffer. */
-  la    x3, work_buf
-  la    x4, inout
-  loop  x30, 2
-    bn.lid x0, 0(x3++)
-    bn.sid x0, 0(x4++)
+  ## la    x3, work_buf
+  ## la    x4, inout
+  ## loop  x30, 2
+  ##   bn.lid x0, 0(x3++)
+  ##   bn.sid x0, 0(x4++)
 
   ecall
 

@@ -105,7 +105,11 @@ ed25519_gen_public_key:
        w16 <= h[255:0] */
   li       x2, 16
   la       x3, ed25519_hash_h_low
-  bn.lid   x2, 0(x3)
+  bn.lid   x2++, 0(x3)
+
+  /* TODO: Temporarily unmask the hash h. */
+  bn.lid   x2++, 32(x3)
+  bn.xor w16, w16, w17
 
   /* Recover the secret scalar s from h.
        w16 <= s */
@@ -566,24 +570,99 @@ ed25519_sign_stage2:
        w4 <= k mod L */
   bn.mov   w4, w18
 
-  /* Load the 256-bit lower half of the precomputed hash h.
-       w16 <= h[255:0] */
-  li       x2, 16
+  /* Generate random 128-bit multiplicative mask alpha.
+       w2 <= alpha. */
+  bn.wsrr w2, URND /* mask */
+  bn.rshi w2, w31, w2 >> 128
+
+  /* Invert alpha.
+       w3 <= alpha^-1 mod L. */
+  bn.mov w23, w2
+  jal x1, sc_mod_inv
+  bn.mov w3, w18 /* inverse mask */
+
+  /* Load the 256-bit lower half of the Boolean-masked precomputed hash h.
+       w20 <= h_share0[255:0]
+       w10 <= h_share1[255:0]. */
+  li       x2, 20
   la       x3, ed25519_hash_h_low
   bn.lid   x2, 0(x3)
+  li       x2, 10
+  bn.lid   x2, 32(x3)
 
   /* Recover the secret scalar s from h.
        w16 <= s */
-  jal      x1, sc_clamp
+  /* jal      x1, sc_clamp */
+
+  /* Expand the 256-bit shares of h to 320 before clamping and converting them
+     to arithmetic shares.
+       w[21:w20] <= URND | h_share0[255:0]
+       w[11:w10] <= URND | h_share1[255:0]. */
+  bn.wsrr w21, URND
+  bn.rshi w21, w31, w21 >> 192
+  bn.mov w11, w21
+
+  /* bn.xor w20, w16, w8 */
+  /* bn.xor w21, w31, w9 */
+  /* bn.mov w10, w8 */
+  /* bn.mov w11, w9 */
+
+  /* Recover the masked secret scalar s from h.
+       w[21:w20] <= s0
+       w[11:w10] <= s1. */
+  jal x1, _sc_clamp
+
+  /* Convert the 320-bit Boolean shares to 320-bit arithmetic shares.
+       w[21:w20] <= s0_A
+       w[11:w10] <= s1_A. */
+  jal x1, share_scalar
+
+  bn.mov w6, w10
+  bn.mov w7, w11
+  /* bn.mov w8, w10 */
+  /* bn.mov w9, w11 */
+
+  /* bn.add w16, w20, w10 */
+  /* bn.addc w17, w21, w11 */
+  /* jal x1, sc_reduce */
+
+  /* bn.mov w20, w6 */
+  /* bn.mov w21, w7 */
+
+  /* w8 <= (alpha * s0_A) mod L <= [w21:w20] * w2 mod L. */
+  bn.mov w22, w2
+  jal x1, sc_mul_320x128
+  bn.mov w8, w18
+
+  /* w18 <= (alpha * s1_A) mod L <= [w7:w6] * w2 mod L. */
+  bn.mov w20, w6
+  bn.mov w21, w7
+  bn.mov w22, w2
+  jal x1, sc_mul_320x128
+
+  /* w8 <= alpha * (s0_A + s1_A) mod L <= w8 + w18 mod L. */
+  bn.addm w8, w8, w18
+
+  /* /\* multiply s with mask *\/ */
+  /* bn.mov w21, w18 */
+  /* bn.mov w22, w2 */
+  /* jal x1, sc_mul */
+  /* bn.mov w8, w18 */
+
+  /* w18 <= alpha^-1 * k mod L <= w4 * w3 mod L. */
+  bn.mov w21, w4
+  bn.mov w22, w3
+  jal x1, sc_mul
+  /* bn.mov w4, w18 */
 
   /* Compute the signature scalar S = (r + (k * s)) mod L. Note: s is not fully
      reduced modulo L here, but that is permitted according to the
      specification of sc_mul, which only requires that its inputs fit in 256
      bits. */
 
-  /* w18 <= (w4 * w16) mod L = (k * s) mod L */
-  bn.mov   w21, w4
-  bn.mov   w22, w16
+  /* w18 <= (w18 * w8) mod L = ((alpha^-1 * k) * (alpha * s)) mod L */
+  bn.mov   w21, w18
+  bn.mov   w22, w8
   jal      x1, sc_mul
 
   /* w4 <= (w5 + w18) mod L = (r + k * s) mod L = S */
@@ -635,6 +714,26 @@ sc_clamp:
   bn.addi  w17, w31, 1
   /* w16 <= [w17:w16] >> 2 = (1 << 254) + (h[255:3] << 3) */
   bn.rshi  w16, w17, w16 >> 2
+  ret
+
+_sc_clamp:
+  /* w16 <= w16 >> 3 = h[255:3] */
+  bn.rshi  w20, w31, w20 >> 3
+  /* w16 <= w16 << 5 = h[253:3] << 5 */
+  bn.rshi  w20, w20, w31 >> 251
+  /* w17 <= 1 */
+  bn.addi  w30, w31, 1
+  /* w16 <= [w17:w16] >> 2 = (1 << 254) + (h[255:3] << 3) */
+  bn.rshi  w20, w30, w20 >> 2
+
+  bn.xor w31, w31, w31 /* dummy */
+
+  bn.rshi  w10, w31, w10 >> 3
+  /* w16 <= w16 << 5 = h[253:3] << 5 */
+  bn.rshi  w10, w10, w31 >> 251
+  /* w16 <= [w17:w16] >> 2 = (1 << 254) + (h[255:3] << 3) */
+  bn.rshi  w10, w31, w10 >> 2
+
   ret
 
 /**
@@ -1640,7 +1739,7 @@ ed25519_hash_k:
 .balign 32
 .weak ed25519_hash_h_low
 ed25519_hash_h_low:
-  .zero 32
+  .zero 64
 
 /* Precomputed hash r (512 bits). See RFC 8032, section 5.1.6, step 2 or the
    docstring of ed25519_sign. Input for sign. */

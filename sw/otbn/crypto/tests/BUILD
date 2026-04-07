@@ -119,6 +119,40 @@ otbn_sim_test(
 )
 
 otbn_sim_test(
+    name = "ed25519_share_scalar_test",
+    srcs = [
+        "ed25519_share_scalar_test.s",
+    ],
+    deps = [
+        "//sw/otbn/crypto:ed25519_scalar",
+        "//sw/otbn/crypto:ed25519_b2a",
+    ],
+    testcase = "ed25519_share_scalar_test.hjson",
+)
+
+otbn_sim_test(
+    name = "ed25519_sc_mul_320x128_test",
+    srcs = [
+        "ed25519_sc_mul_320x128_test.s",
+    ],
+    deps = [
+        "//sw/otbn/crypto:ed25519_scalar",
+    ],
+    testcase = "ed25519_sc_mul_320x128_test.hjson",
+)
+
+otbn_sim_test(
+    name = "ed25519_sc_mod_inv_test",
+    srcs = [
+        "ed25519_sc_mod_inv_test.s",
+    ],
+    deps = [
+        "//sw/otbn/crypto:ed25519_scalar",
+    ],
+    testcase = "ed25519_sc_mod_inv_test.hjson",
+)
+
+otbn_sim_test(
     name = "field25519_test",
     srcs = [
         "field25519_test.s",

@@ -213,22 +213,23 @@ ed25519_hash_r:
 .globl ed25519_hash_h_low
 .balign 32
 ed25519_hash_h_low:
-  .word 0x86837c35
-  .word 0xcb33284f
-  .word 0xf12e7a42
-  .word 0x3c010ac0
-  .word 0x6827fffd
-  .word 0xa3c080d9
-  .word 0x06f020a5
-  .word 0x0fe94d90
-  .word 0x86837c35
-  .word 0xcb33284f
-  .word 0xf12e7a42
-  .word 0x3c010ac0
-  .word 0x6827fffd
-  .word 0xa3c080d9
-  .word 0x06f020a5
-  .word 0x0fe94d90
+.word 0x5eaf7bf8
+.word 0xa9ac47f1
+.word 0x332736ee
+.word 0xdfe60c42
+.word 0x038d6ba8
+.word 0xa99dafed
+.word 0x44b87e9f
+.word 0xf8c1f96a
+
+.word 0xd82c07cd
+.word 0x629f6fbe
+.word 0xc2094cac
+.word 0xe3e70682
+.word 0x6baa9455
+.word 0x0a5d2f34
+.word 0x42485e3a
+.word 0xf728b4fa
 
 .globl test1_expected_sig_R
 .balign 32

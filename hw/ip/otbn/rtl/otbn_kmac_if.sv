@@ -205,6 +205,7 @@ module otbn_kmac_if
 
   logic accept_data_rsp;
   logic clear_rsp_valid;
+  logic clear_error_flags;
   logic discard_rsp_ready;
   logic finish_rsp_hs;
 
@@ -230,6 +231,7 @@ module otbn_kmac_if
     // Control signals for the response handling.
     accept_data_rsp   = 1'b0;
     clear_rsp_valid   = 1'b0;
+    clear_error_flags = 1'b0;
     discard_rsp_ready = 1'b0;
 
     // Secure wipe recovery
@@ -360,8 +362,9 @@ module otbn_kmac_if
           state_d = OtbnKmacSecWipeClearing;
         end else if (current_cmd.close) begin
           // Clean up any state
-          state_d         = OtbnKmacIdle;
-          clear_rsp_valid = 1'b1;
+          state_d           = OtbnKmacIdle;
+          clear_rsp_valid   = 1'b1;
+          clear_error_flags = 1'b1;
         end
         unexpected_cmd_detected = |{current_cmd.start, current_cmd.send, current_cmd.proc,
                                     current_cmd.done};
@@ -791,11 +794,14 @@ module otbn_kmac_if
 
   assign ispr_kmac_status_rdata_o = ispr_kmac_status_r;
 
-  assign clear_rsp_error = ispr_kmac_status_w.status.rsp_error & ispr_kmac_status_wr_i;
+  assign clear_rsp_error = (ispr_kmac_status_w.status.rsp_error && ispr_kmac_status_wr_i) ||
+                           clear_error_flags;
 
-  assign clear_msg_write_error = ispr_kmac_status_w.status.msg_write_error & ispr_kmac_status_wr_i;
+  assign clear_msg_write_error =
+      (ispr_kmac_status_w.status.msg_write_error && ispr_kmac_status_wr_i) || clear_error_flags;
 
-  assign clear_ctrl_error = ispr_kmac_status_w.status.ctrl_error & ispr_kmac_status_wr_i;
+  assign clear_ctrl_error = (ispr_kmac_status_w.status.ctrl_error && ispr_kmac_status_wr_i) ||
+                            clear_error_flags;
 
   ///////////////////////////
   // Secure wipe detection //

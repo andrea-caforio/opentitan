@@ -93,7 +93,7 @@ otcrypto_status_t otcrypto_mldsa87_keygen(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_sign(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature);
 
 /**
@@ -115,9 +115,9 @@ otcrypto_status_t otcrypto_mldsa87_sign(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_verify(
     const otcrypto_unblinded_key_t *public_key,
-    const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
-    otcrypto_const_word32_buf_t signature,
+    const otcrypto_const_word32_buf_t *message,
+    const otcrypto_const_word32_buf_t *context, otcrypto_mldsa_hash_mode_t hash_mode,
+    const otcrypto_const_word32_buf_t *signature,
     hardened_bool_t *verification_result);
 
 /**
@@ -186,7 +186,7 @@ otcrypto_status_t otcrypto_mldsa87_keygen_async_finalize(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_sign_async_start(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature);
 
 /**
@@ -207,7 +207,7 @@ otcrypto_status_t otcrypto_mldsa87_sign_async_start(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_sign_async_finalize(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature);
 
 /**
@@ -228,7 +228,7 @@ OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_verify_async_start(
     const otcrypto_unblinded_key_t *public_key,
     const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
+    const otcrypto_const_byte_buf_t context, otcrypto_mldsa_hash_mode_t hash_mode,
     otcrypto_const_word32_buf_t signature,
     hardened_bool_t *verification_result);
 
@@ -252,7 +252,7 @@ OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_verify_async_finalize(
     const otcrypto_unblinded_key_t *public_key,
     const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
+    const otcrypto_const_byte_buf_t context, otcrypto_mldsa_hash_mode_t hash_mode,
     otcrypto_const_word32_buf_t signature,
     hardened_bool_t *verification_result);
 

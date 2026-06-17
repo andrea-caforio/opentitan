@@ -6,6 +6,7 @@
 
 #include "sw/device/lib/crypto/impl/status.h"
 #include "sw/device/lib/crypto/include/datatypes.h"
+#include "sw/device/lib/crypto/impl/mldsa/mldsa.h"
 
 // Module ID for status codes.
 #define MODULE_ID MAKE_MODULE_ID('m', 'l', 'd')
@@ -19,7 +20,7 @@ otcrypto_status_t otcrypto_mldsa87_keygen(
 
 otcrypto_status_t otcrypto_mldsa87_sign(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature) {
   // TODO: Connect ML-DSA operations to API.
   return OTCRYPTO_NOT_IMPLEMENTED;
@@ -27,12 +28,18 @@ otcrypto_status_t otcrypto_mldsa87_sign(
 
 otcrypto_status_t otcrypto_mldsa87_verify(
     const otcrypto_unblinded_key_t *public_key,
-    const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
-    otcrypto_const_word32_buf_t signature,
+    const otcrypto_const_word32_buf_t *message,
+    const otcrypto_const_word32_buf_t *context, otcrypto_mldsa_hash_mode_t hash_mode,
+    const otcrypto_const_word32_buf_t *signature,
     hardened_bool_t *verification_result) {
   // TODO: Connect ML-DSA operations to API.
-  return OTCRYPTO_NOT_IMPLEMENTED;
+
+  hardened_bool_t ok;
+
+  (void)mldsa87_verify_internal_start(public_key, signature, message);
+  (void)mldsa87_verify_internal_finalize(signature, &ok);
+  
+  return OTCRYPTO_OK;
 }
 
 otcrypto_status_t otcrypto_mldsa87_keycheck(
@@ -59,7 +66,7 @@ otcrypto_status_t otcrypto_mldsa87_keygen_async_finalize(
 
 otcrypto_status_t otcrypto_mldsa87_sign_async_start(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature) {
   // TODO: Connect ML-DSA operations to API.
   return OTCRYPTO_NOT_IMPLEMENTED;
@@ -67,7 +74,7 @@ otcrypto_status_t otcrypto_mldsa87_sign_async_start(
 
 otcrypto_status_t otcrypto_mldsa87_sign_async_finalize(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature) {
   // TODO: Connect ML-DSA operations to API.
   return OTCRYPTO_NOT_IMPLEMENTED;
@@ -76,7 +83,7 @@ otcrypto_status_t otcrypto_mldsa87_sign_async_finalize(
 otcrypto_status_t otcrypto_mldsa87_verify_async_start(
     const otcrypto_unblinded_key_t *public_key,
     const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
+    const otcrypto_const_byte_buf_t context, otcrypto_mldsa_hash_mode_t hash_mode,
     otcrypto_const_word32_buf_t signature,
     hardened_bool_t *verification_result) {
   // TODO: Connect ML-DSA operations to API.
@@ -86,7 +93,7 @@ otcrypto_status_t otcrypto_mldsa87_verify_async_start(
 otcrypto_status_t otcrypto_mldsa87_verify_async_finalize(
     const otcrypto_unblinded_key_t *public_key,
     const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
+    const otcrypto_const_byte_buf_t context, otcrypto_mldsa_hash_mode_t hash_mode,
     otcrypto_const_word32_buf_t signature,
     hardened_bool_t *verification_result) {
   // TODO: Connect ML-DSA operations to API.

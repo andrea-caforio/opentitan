@@ -62,7 +62,7 @@ interface.
 
 /* Timeout value (number of iterations in `_xof_kmac_status_poll` and
    `_xof_kmac_if_status_poll`) when polling the KMAC interface. */
-.set KMAC_POLL_MAX_ITERS, 1024
+.set KMAC_POLL_MAX_ITERS, 512
 
 /* Size of the KMAC-internal rate buffer (number of 64-bit chunks) from which
    the XOF output is squeezed. */
@@ -105,40 +105,25 @@ interface.
  * issuing an `unimp` instruction.
  */
 xof_shake128_init:
-  addi x24, x0, KMAC_CFG_SHAKE128
+  li x24, 0x2e0011
   csrrw x0, KMAC_CFG, x24
   addi x28, x0, KMAC_SHAKE128_RATE
   addi x29, x0, KMAC_SHAKE128_RATE
   jal x0, _xof_shake_init
 xof_shake256_init:
-  addi x24, x0, KMAC_CFG_SHAKE256
+  li x24, 0x2a0015
   csrrw x0, KMAC_CFG, x24
   addi x28, x0, KMAC_SHAKE256_RATE
   addi x29, x0, KMAC_SHAKE256_RATE
 _xof_shake_init:
-  /* Clear error bit in the KMAC_INTR register. */
-  addi x24, x0, KMAC_INTR_ERROR
-  csrrw x0, KMAC_INTR, x24
 
   /* Set the timeout maximum value. */
   addi x30, x0, KMAC_POLL_MAX_ITERS
 
-  /* Make sure the KMAC block is idle. Note that until we issue a successful
-     `START` command the KMAC block can still be claimed by other actors. */
-  addi x24, x0, KMAC_STATUS_IDLE
-  jal x1, _xof_kmac_status_poll
+  jal x1, _xof_ready_poll
 
-  /* Trigger a new XOF computation. */
-  addi x24, x0, KMAC_CMD_START
-  csrrw x0, KMAC_CMD, x24
-
-  /* Transfer the KMAC block to the absorption stage. */
-  addi x24, x0, KMAC_STATUS_ABSORB
-  jal x1, _xof_kmac_status_poll
-
-  /* Any error during the initialization will abort the OTBN process. */
-  csrrs x24, KMAC_INTR, x0
-  bne x24, x0, _xof_fail
+  li x24, 0x1
+  csrrs x0, KMAC_CTRL, x24
 
   ret
 
@@ -147,26 +132,28 @@ _xof_shake_init:
  *
  * @param[in] x24: Expected value in the CSR.
  */
-_xof_kmac_status_poll:
-  beq x30, x0, _xof_fail
+_xof_ready_poll:
+  beq x30, x0, _xof_terminate
   addi x30, x30, -1
   csrrs x25, KMAC_STATUS, x0
-  bne x24, x25, _xof_kmac_status_poll
+  andi x25, x25, 0x1
+  beq x25, x0, _xof_ready_poll
   addi x30, x0, KMAC_POLL_MAX_ITERS
   ret
-_xof_kmac_if_status_poll:
-  beq x30, x0, _xof_fail
+_xof_rsp_valid_poll:
+  beq x30, x0, _xof_terminate
   addi x30, x30, -1
-  csrrs x25, KMAC_IF_STATUS, x0
-  bne x24, x25, _xof_kmac_if_status_poll
+  csrrs x25, KMAC_STATUS, x0
+  andi x25, x25, 0x2
+  beq x25, x0, _xof_rsp_valid_poll
   addi x30, x0, KMAC_POLL_MAX_ITERS
   ret
 
 /* Errors are not recoverable and result in an aborted process. */
-_xof_fail:
+_xof_terminate:
   /* Still attempt to liberate the KMAC block before crashing. */
-  addi x24, x0, KMAC_CMD_FINISH
-  csrrw x0, KMAC_CMD, x24
+  li x24, 0x10
+  csrrs x0, KMAC_CTRL, x24
   unimp
 
 /**
@@ -175,8 +162,22 @@ _xof_fail:
  * starting a new one.
  */
 xof_finish:
-  addi x24, x0, KMAC_CMD_FINISH
-  csrrw x0, KMAC_CMD, x24
+  li x24, 0x8
+  csrrs x0, KMAC_CTRL, x24
+
+  /* Wait for the finish response acknowledging the end of the session. */
+  jal x1, _xof_rsp_valid_poll
+
+  /* Check for errors in the finish response but defer acting on it until the session is closed. */
+  csrrs x24, KMAC_STATUS, x0
+  andi x24, x24, 0x4
+
+  /* Always close the session even on an error. */
+  li x25, 0x10
+  csrrs x0, KMAC_CTRL, x25
+
+  bne x24, x0, _xof_terminate
+  
   ret
 
 /**
@@ -203,6 +204,8 @@ xof_absorb:
    * where x = 32, if n >= 32, else x = n.
    */
 
+  jal x1, _xof_ready_poll
+
   /* x = n - 32. */
   addi  x24, x20, -32
 
@@ -216,11 +219,10 @@ xof_absorb:
   addi  x25, x0, -1
   srl   x24, x25, x24
 
-  csrrw x0, KMAC_BYTE_STROBE, x24
+  csrrw x0, KMAC_STRB, x24
 
   /* Make sure KMAC is ready to absorb data. */
-  addi x24, x0, KMAC_IF_STATUS_MSG_WRITE_RDY
-  jal x1, _xof_kmac_if_status_poll
+  /* addi x24, x0, KMAC_IF_STATUS_MSG_WRITE_RDY */
 
   bne x22, x0, _xof_absorb_masked_begin
 
@@ -246,8 +248,8 @@ _xof_absorb_masked_begin:
 _xof_absorb_masked_end:
 
   /* Trigger the absorption of the written message word. */
-  addi x24, x0, 1
-  csrrw x0, KMAC_MSG_SEND, x24
+  li x24, 0x2
+  csrrw x0, KMAC_CTRL, x24
 
   /* Absorb the next chunk of <= 32 message bytes. */
   jal x0, xof_absorb
@@ -264,13 +266,18 @@ _xof_absorb_end:
  * there was no message absorption in order to be able to squeeze the digest.
  */
 xof_process:
-  /* Trigger the processing of the absorbed message. */
-  addi x24, x0, KMAC_CMD_PROCESS
-  csrrw x0, KMAC_CMD, x24
+  jal x1, _xof_ready_poll
 
-  /* Poll until the first 64-bit digest is ready to be read out. */
-  addi x24, x0, KMAC_IF_STATUS_DIGEST_VALID
-  jal x1, _xof_kmac_if_status_poll
+  li x24, 0x4
+  csrrs x0, KMAC_CTRL, x24
+
+  jal x1, _xof_rsp_valid_poll
+
+  /* Error check */
+
+  csrrs x24, KMAC_STATUS, x0
+  andi x24, x24, 0x1c
+  bne x24, x0, _xof_terminate
 
   ret
 
@@ -284,20 +291,22 @@ xof_process:
  */
 xof_squeeze32:
   /* Preload the run command. */
-  addi x26, x0, KMAC_CMD_RUN
+  /* addi x26, x0, KMAC_CMD_RUN */
 
   /* Squeeze the 32 bytes in chunks of 64 bits from the KMAC-internal rate
      buffer. */
-  loopi 4, 10
+  loopi 4, 8
 
     /* Only issue the `RUN` command if there are fewer than 64 bits remaining in
        the rate buffer. */
     bne x28, x0, _xof_squeeze32_recharge
 
-    csrrw x0, KMAC_CMD, x26
+    /* csrrw x0, KMAC_CMD, x26 */
 
-    addi x24, x0, KMAC_IF_STATUS_DIGEST_VALID
-    jal x1, _xof_kmac_if_status_poll
+    /* addi x24, x0, KMAC_IF_STATUS_DIGEST_VALID */
+    /* jal x1, _xof_kmac_if_status_poll */
+
+    jal x1, _xof_rsp_valid_poll
 
     /* Reset the rate counter. */
     addi x28, x29, 0
@@ -325,16 +334,18 @@ xof_squeeze24:
 
   /* Squeeze the 24 bytes in chunks of 64 bits from the KMAC-internal rate
      buffer. */
-  loopi 3, 10
+  loopi 3, 8
 
     /* Only issue the `RUN` command if there are fewer than 64 bits remaining in
        the rate buffer. */
     bne x28, x0, _xof_squeeze24_recharge
 
-    csrrw x0, KMAC_CMD, x26
+    /* csrrw x0, KMAC_CMD, x26 */
 
-    addi x24, x0, KMAC_IF_STATUS_DIGEST_VALID
-    jal x1, _xof_kmac_if_status_poll
+    /* addi x24, x0, KMAC_IF_STATUS_DIGEST_VALID */
+    /* jal x1, _xof_kmac_if_status_poll */
+
+    jal x1, _xof_rsp_valid_poll
 
     /* Reset the rate counter. */
     addi x28, x29, 0

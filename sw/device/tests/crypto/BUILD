@@ -717,6 +717,44 @@ opentitan_test(
     ],
 )
 
+cc_library(
+    name = "mldsa87_verify_testvectors",
+    srcs = ["mldsa87_verify_testvectors.h"],
+    deps = [
+      "//sw/device/lib/crypto/impl:mldsa",
+    ],
+)
+
+opentitan_test(
+    name = "mldsa87_verify_functest",
+    srcs = ["mldsa87_verify_functest.c"],
+    exec_env = CRYPTOTEST_EXEC_ENVS,
+    verilator = verilator_params(
+        timeout = "long",
+    ),
+    deps = [
+        "//hw/top/dt",
+        "//sw/device/lib/dif:kmac",
+        "//sw/device/lib/dif:otbn",
+        "//sw/device/lib/testing:entropy_testutils",
+        "//sw/device/lib/crypto/drivers:kmac",
+
+       "//sw/device/lib/testing:kmac_testutils",
+        "//sw/device/lib/testing:otbn_testutils",
+        "//sw/device/lib/base:hardened_memory",
+        "//sw/device/lib/crypto/drivers:otbn",
+        "//sw/device/lib/crypto/impl:config",
+        "//sw/device/lib/crypto/impl:mldsa",
+        "//sw/device/lib/crypto/impl:entropy_src",
+        "//sw/device/lib/crypto/impl:keyblob",
+        "//sw/device/lib/crypto/impl:sha2",
+        "//sw/device/lib/crypto/include:datatypes",
+        "//sw/device/lib/runtime:log",
+        "//sw/device/lib/testing/test_framework:ottf_main",
+        ":mldsa87_verify_testvectors",
+    ],
+)
+
 opentitan_test(
     name = "ecdsa_p384_functest",
     srcs = ["ecdsa_p384_functest.c"],

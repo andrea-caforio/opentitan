@@ -16,6 +16,20 @@
 extern "C" {
 #endif  // __cplusplus
 
+enum {
+  // Size of a ML-DSA-87 public key.
+  kOtcryptoMldsa87PkBytes = 2592,
+  kOtcryptoMldsa87PkWords = kOtcryptoMldsa87PkBytes / sizeof(uint32_t),
+  // Size of a ML-DSA-87 secret key.
+  kOtcryptoMldsa87SkBytes = 4896,
+  kOtcryptoMldsa87SkWords = kOtcryptoMldsa87SkBytes / sizeof(uint32_t),
+  // Size of a ML-DSA-87 signature with 1-byte zero-padding.
+  kOtcryptoMldsa87SigBytes = 4627 + 1,
+  kOtcryptoMldsa87SigWords = kOtcryptoMldsa87SigBytes / sizeof(uint32_t),
+  // Maximum size of a ML-DSA context string.
+  kOtcryptoMldsa87ContextMaxBytes = 255,  
+};
+
 /**
  * Hashing modes for ML-DSA sign and verify.
  *
@@ -33,11 +47,18 @@ extern "C" {
  */
 typedef enum otcrypto_mldsa_hash_mode {
   // Pure mode hashing.
-  kOtcryptoMldsaHashModePure = 0x4b5,
-  // Pre-hash modes.
-  kOtcryptoMldsaHashModeSha256 = 0x706,
-  kOtcryptoMldsaHashModeSha512 = 0x65b,
-  kOtcryptoMldsaHashModeShake128 = 0x1a2,
+  kOtcryptoMldsaHashModePure = 0x0,
+  // Supported pre-hash modes.
+  kOtcryptoMldsaHashModeSha2_256 = 0x1,
+  kOtcryptoMldsaHashModeSha2_384 = 0x2,
+  kOtcryptoMldsaHashModeSha2_512 = 0x3,
+  kOtcryptoMldsaHashModeSha3_224 = 0x4,
+  kOtcryptoMldsaHashModeSha3_256 = 0x5,
+  kOtcryptoMldsaHashModeSha3_384 = 0x6,
+  kOtcryptoMldsaHashModeSha3_512 = 0x7,
+  kOtcryptoMldsaHashModeShake128 = 0x8,
+  kOtcryptoMldsaHashModeShake256 = 0x9,
+  // Unsupported pre-hash modes: SHA2_224, SHA2_256/224 and SHA2_512/256.
 } otcrypto_mldsa_hash_mode_t;
 
 /**
@@ -93,7 +114,7 @@ otcrypto_status_t otcrypto_mldsa87_keygen(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_sign(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature);
 
 /**
@@ -105,19 +126,20 @@ otcrypto_status_t otcrypto_mldsa87_sign(
  * encountered, and may return OK even when the signature is invalid.
  *
  * @param public_key Pointer to the unshared public key.
- * @param message Message to be signed for verification.
- * @param context Context string (must be at most 255 bytes).
- * @param hash_mode ML-DSA hashing mode (pure or pre-hash).
+ * @param message Message to be signed for verification (can be NULL).
+ * @param context Context string (max 255 bytes, can be NULL).
  * @param signature Pointer to the signature to be verified.
+ * @param hash_mode ML-DSA hashing mode (pure or pre-hash).
  * @param[out] verification_result Whether the signature passed verification.
  * @return Result of the Ed25519 verification operation.
  */
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_verify(
     const otcrypto_unblinded_key_t *public_key,
-    const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
-    otcrypto_const_word32_buf_t signature,
+    const otcrypto_const_byte_buf_t *message,
+    const otcrypto_const_byte_buf_t *context,
+    const otcrypto_const_word32_buf_t *signature,
+    otcrypto_mldsa_hash_mode_t hash_mode,
     hardened_bool_t *verification_result);
 
 /**
@@ -186,7 +208,7 @@ otcrypto_status_t otcrypto_mldsa87_keygen_async_finalize(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_sign_async_start(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature);
 
 /**
@@ -207,7 +229,7 @@ otcrypto_status_t otcrypto_mldsa87_sign_async_start(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_sign_async_finalize(
     const otcrypto_blinded_key_t *private_key,
-    const otcrypto_const_byte_t message, const otcrypto_const_byte_t context,
+    const otcrypto_const_byte_buf_t message, const otcrypto_const_byte_buf_t context,
     otcrypto_mldsa_hash_mode_t hash_mode, otcrypto_word32_buf_t signature);
 
 /**
@@ -227,10 +249,10 @@ otcrypto_status_t otcrypto_mldsa87_sign_async_finalize(
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_verify_async_start(
     const otcrypto_unblinded_key_t *public_key,
-    const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
-    otcrypto_const_word32_buf_t signature,
-    hardened_bool_t *verification_result);
+    const otcrypto_const_byte_buf_t *message,
+    const otcrypto_const_byte_buf_t *context, 
+    const otcrypto_const_word32_buf_t *signature,
+    otcrypto_mldsa_hash_mode_t hash_mode);
 
 /**
  * Finalizes asynchronous signature verification for ML-DSA-87 (WIP not yet
@@ -250,10 +272,7 @@ otcrypto_status_t otcrypto_mldsa87_verify_async_start(
  */
 OT_WARN_UNUSED_RESULT
 otcrypto_status_t otcrypto_mldsa87_verify_async_finalize(
-    const otcrypto_unblinded_key_t *public_key,
-    const otcrypto_const_byte_buf_t message,
-    const otcrypto_const_byte_t context, otcrypto_mldsa87_hash_mode_t hash_mode,
-    otcrypto_const_word32_buf_t signature,
+    const otcrypto_const_word32_buf_t *signature,
     hardened_bool_t *verification_result);
 
 /**

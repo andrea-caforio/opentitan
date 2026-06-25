@@ -236,9 +236,7 @@ sample_in_ball:
   jal x1, xof_absorb
   jal x1, xof_process
 
-  /*
-   * Squeeze 8 bytes to create the 64-bit string indicator string h.
-   */
+  /* Squeeze 8 bytes to create the 64-bit string indicator string h. */
 
   addi x20, x0, 8
   jal x1, xof_squeeze32
